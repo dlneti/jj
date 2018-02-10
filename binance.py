@@ -2,12 +2,17 @@ from urllib2 import urlopen as uo  ### ToDo:  SWITCH TO REQUEST MODULE
 import json
 import csv
 import logging
-from settings import BASE_URL_BNC, LOG_FORMAT
+from settings import BASE_URL_BNC, LOG_FORMAT, LOG_FN_MAIN
 
-logging.basicConfig(filename='binance.log',
-                    level=logging.INFO,
-                    format=LOG_FORMAT)
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
+
+formatter = logging.Formatter(LOG_FORMAT)
+
+file_handler = logging.FileHandler(LOG_FN_MAIN)
+file_handler.setFormatter(formatter)
+
+logger.addHandler(file_handler)
+logger.setLevel(logging.INFO)
 
 base_url = BASE_URL_BNC + 'ticker/allPrices'
 FILENAME = 'bincoins.csv'
@@ -42,9 +47,6 @@ def getCoinList():
         writer = csv.writer(f)
         for coin in coins:
             writer.writerow([coin[:-3]])
-
-    logger.info('New "{}" has been created.'.format(FILENAME))
-
 
 
 def checkList():

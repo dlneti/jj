@@ -1,3 +1,6 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+
 from telegram.ext import Updater, CommandHandler, Filters
 import json
 import logging
@@ -6,14 +9,14 @@ from modules import *
 from settings import *
 from binance import checkList
 
-logging.basicConfig(filename='main.log',
-                    level=logging.INFO,
-                    format=LOG_FORMAT)
-logger = logging.getLogger()
+logger = logging.getLogger(__name__)
+formatter = logging.Formatter(LOG_FORMAT)
 
-updater = Updater(token=TOKEN)
-dispatcher = updater.dispatcher
-j = updater.job_queue
+file_handler = logging.FileHandler(LOG_FN_MAIN)
+file_handler.setFormatter(formatter)
+
+logger.addHandler(file_handler)
+logger.setLevel(logging.INFO)
 
 
 def start(bot, update):
@@ -25,10 +28,12 @@ def start(bot, update):
     message += "\n\nMore updates 'soon'"
 
     bot.send_message(chat_id=update.message.chat_id, text=message)
-    logger.info("<User: {} | ID: {} | LC: {}> used the /start command".format(
+    logger.info("/start {0}:{1}:{2}:{3}-{4}".format(
         update.message.from_user['username'],
         update.message.from_user['id'],
-        update.message.from_user['language_code'])
+        update.message.from_user['language_code'],
+        update.message.chat_id,
+        update.message.chat.type)
     )
 
 
@@ -36,20 +41,21 @@ def getPrice(bot, update, args):
 
 
     try:
-        if not getCoinPrice(args[0]):
+        response = getCoinPrice(args[0])
+        if not response:
             message = "'{}' is not in my database. Check your spelling.".format(args[0])
             bot.send_message(chat_id=update.message.chat_id, text=message)
 
-            logger.info("<User: {} | ID: {} | LC: {}> asked for /price of [{}] = COIN NOT FOUND".format(
+            logger.info("/price {0}:NOT_FOUND {1}:{2}:{3}:{4}-{5}".format(
+                ','.join(args),
                 update.message.from_user['username'],
                 update.message.from_user['id'],
                 update.message.from_user['language_code'],
-                args[0])
+                update.message.chat_id,
+                update.message.chat.type)
             )
 
         else:
-            response = getCoinPrice(args[0])
-
             name = response['name']
             rank = response['rank']
             symbol = response['symbol']
@@ -87,18 +93,27 @@ def getPrice(bot, update, args):
                 bot.send_message(chat_id=update.message.chat_id,
                                  parse_mode='HTML', text=binance_message)
 
-            logger.info("<User: {} | ID: {} | LC: {}> asked for /price of [{}]".format(
+            logger.info("/price {0} {1}:{2}:{3}:{4}-{5}".format(
+                ','.join(args),
                 update.message.from_user['username'],
                 update.message.from_user['id'],
                 update.message.from_user['language_code'],
-                args[0])
+                update.message.chat_id,
+                update.message.chat.type)
             )
     except IndexError:
         message = "I can't read your mind (yet). If you don't specify a coin"
         message += ", how do I know what coin to check?"
         bot.send_message(chat_id=update.message.chat_id, text=message)
 
-        logger.info("/price command has been used without an argument")
+        logger.info("/price [] {0}:{1}:{2}:{3}-{4}".format(
+            ','.join(args),
+            update.message.from_user['username'],
+            update.message.from_user['id'],
+            update.message.from_user['language_code'],
+            update.message.chat_id,
+            update.message.chat.type)
+        )
 
 
 def ct(bot, update, args):
@@ -193,8 +208,18 @@ def ct(bot, update, args):
                                  parse_mode='HTML',
                                  text=message)
 
+    logger.info("/ct {0} {1}:{2}:{3}:{4}-{5}".format(
+        ','.join(args),
+        update.message.from_user['username'],
+        update.message.from_user['id'],
+        update.message.from_user['language_code'],
+        update.message.chat_id,
+        update.message.chat.type)
+    )
+
 
 def newCoin(bot, job):
+
     new_coin = checkList()
     message = str()
     t_now = time.strftime('%H%M', time.localtime(time.time()))
@@ -210,45 +235,65 @@ def newCoin(bot, job):
         bot.send_message(chat_id=GRP_ID, parse_mode='HTML', text=message)
 
     if refresh:
-        getCmc()
-        logger.info("CMC Data refreshed by {1}".format(newCoin.__name__))
+        try:
+            getCmc()
+            logger.info("CMC Data refreshed - {0}()".format(
+                time.ctime(),
+                newCoin.__name__)
+            )
+        except Exception:
+            logger.exception("Something went wrong. CMC not refreshed")
 
 
 def refresh(bot, update):
+
     getCmc()
     bot.send_message(chat_id=update.message.chat_id, text="Done")
-    logger.info(
-        "CMC Data refreshed by {0}:{1}".format(update.message.from_user['id'],
-                                               update.message.from_user['username']
-                                        )
+
+    logger.info("CMC Data refreshed by {0}:{1}".format(
+        update.message.from_user['id'],
+        update.message.from_user['username'])
     )
 
 
+def main():
+    logger.info("Start by {0}()".format(main.__name__))
 
-# REPEATING
-j.run_repeating(newCoin, interval=60, first=0)
+    updater = Updater(token=TOKEN)
+    dispatcher = updater.dispatcher
+    j = updater.job_queue
 
-# NORMAL COMMANDS
-start_handler = CommandHandler('start', start)
-price_handler = CommandHandler('price', getPrice, pass_args=True)
-ct_handler = CommandHandler('ct', ct, pass_args=True)
+    # REPEATING
+    j.run_repeating(newCoin, interval=60, first=0)
 
-# ADMIN COMMANDS
-refresh_handler = CommandHandler('refresh',
-                                 refresh,
-                                 filters=Filters.user(user_id=ADMIN[0]))
+    # NORMAL COMMANDS
+    start_handler = CommandHandler('start', start)
+    price_handler = CommandHandler('price', getPrice, pass_args=True)
+    ct_handler = CommandHandler('ct', ct, pass_args=True)
 
-dispatcher.add_handler(start_handler)
-dispatcher.add_handler(price_handler)
-dispatcher.add_handler(ct_handler)
-dispatcher.add_handler(refresh_handler)
+    # ADMIN COMMANDS
+    refresh_handler = CommandHandler('refresh',
+                                     refresh,
+                                     filters=Filters.user(user_id=ADMIN[0]))
+
+    dispatcher.add_handler(start_handler)
+    dispatcher.add_handler(price_handler)
+    dispatcher.add_handler(ct_handler)
+    dispatcher.add_handler(refresh_handler)
 
 
-updater.start_webhook(listen=LISTEN_ADR,
-                      port=PORT,
-                      url_path='TOKEN',
-                      key=KEY,
-                      cert=CERT,
-                      webhook_url=URL)
+    updater.start_webhook(listen=LISTEN_ADR,
+                          port=PORT,
+                          url_path='TOKEN',
+                          key=KEY,
+                          cert=CERT,
+                          webhook_url=URL)
 
-updater.idle()
+    updater.idle()
+    logger.info("Shutdown")
+
+try:
+    if __name__ == '__main__':
+        main()
+except Exception:
+    logger.exception('Something went wrong')

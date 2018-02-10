@@ -2,6 +2,18 @@
 
 import requests
 import requests_cache
+import logging
+from settings import LOG_FORMAT, LOG_FN_MAIN
+
+logger = logging.getLogger(__name__)
+
+formatter = logging.Formatter(LOG_FORMAT)
+
+file_handler = logging.FileHandler(LOG_FN_MAIN)
+file_handler.setFormatter(formatter)
+
+logger.addHandler(file_handler)
+logger.setLevel(logging.INFO)
 
 
 class Coinmarketcap(object):
@@ -26,10 +38,17 @@ class Coinmarketcap(object):
 
         try:
             request_raw = self.session().get(self.base_url + endpoint, params=params)
-        except Exception as e:
-            return e
+            logger.info("Request to {0} successful.".format(request_raw.url))
 
-        return request_raw.json()
+            return request_raw.json()
+        except Exception:
+            logger.exception("Request to {0} with {1} params failed.".format(
+                self.base_url + endpoint,
+                params)
+            )
+            return None
+
+
 
     def ticker(self, coin="", **kwargs):
 
