@@ -38,11 +38,11 @@ class Coinmarketcap(object):
 
         try:
             request_raw = self.session().get(self.base_url + endpoint, params=params)
-            logger.info("Request to {0} successful.".format(request_raw.url))
+            logger.info("Request to {0} successful".format(request_raw.url))
 
             return request_raw.json()
         except Exception:
-            logger.exception("Request to {0} with {1} params failed.".format(
+            logger.exception("Request to {0} with {1} params failed".format(
                 self.base_url + endpoint,
                 params)
             )
