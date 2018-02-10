@@ -1,0 +1,10 @@
+*.json
+*.key
+*.pem
+*.csv
+*.pyc
+*.log
+marvinlocal.py
+lab.py
+settings.py
+getCMCdata.py
