@@ -3,11 +3,9 @@
 
 from telegram.ext import Updater, CommandHandler, Filters
 import json
-import logging
 import time
 from modules import *
 from settings import *
-from binance import checkList
 
 logger = logging.getLogger(__name__)
 formatter = logging.Formatter(LOG_FORMAT)
@@ -18,7 +16,7 @@ file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 logger.setLevel(logging.INFO)
 
-
+@log_method
 def start(bot, update):
 
     message = "Hi, my name is Marvin. Please, be nice to me."
@@ -36,7 +34,11 @@ def start(bot, update):
         update.message.chat.type)
     )
 
+@log_method
+def error(bot, update, error):
+    logger.warn('Update {0} caused error {1}'.format(update, error))
 
+@log_method
 def getPrice(bot, update, args):
 
 
@@ -113,7 +115,7 @@ def getPrice(bot, update, args):
                 update.message.chat.type)
             )
 
-
+@log_method
 def ct(bot, update, args):
 
     if len(args) == 1 and args[0] == 'help':
@@ -221,10 +223,11 @@ def ct(bot, update, args):
         update.message.chat.type)
     )
 
-
+@log_method
 def newCoin(bot, job):
 
-    new_coin = checkList()
+    binance = Binance()
+    new_coin = binance.check_list()
     message = str()
     t_now = time.strftime('%H%M', time.localtime(time.time()))
     refresh = (t_now[:-2] in REFRESH_T['hrs']) and (t_now[2:] in REFRESH_T['mins'])
@@ -244,7 +247,7 @@ def newCoin(bot, job):
         except Exception:
             logger.exception("Something went wrong. CMC not refreshed")
 
-
+@log_method
 def refresh(bot, update):
 
     getCmc()
@@ -282,6 +285,7 @@ def main():
         dispatcher.add_handler(price_handler)
         dispatcher.add_handler(ct_handler)
         dispatcher.add_handler(refresh_handler)
+        dispatcher.add_error_handler(error)
 
 
         updater.start_webhook(

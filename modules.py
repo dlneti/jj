@@ -1,8 +1,17 @@
 # -*- coding: utf-8 -*-
 import requests
 import csv
-from wrappers import Coinmarketcap
+from wrappers import *
 from settings import *
+
+logger = logging.getLogger(__name__)
+formatter = logging.Formatter(LOG_FORMAT)
+
+file_handler = logging.FileHandler(LOG_FN_MAIN)
+file_handler.setFormatter(formatter)
+
+logger.addHandler(file_handler)
+logger.setLevel(logging.INFO)
 
 
 class CheckCoin(object):
@@ -148,6 +157,7 @@ def getCoinPrice(coin):
     else:
         req = Coinmarketcap()
         response = req.ticker(coin=check.coin_id)[0]
+        b_price = None if not check.binance else Binance()
 
         data = {'name': response['name'],
                 'rank': response['rank'],
@@ -157,8 +167,8 @@ def getCoinPrice(coin):
                 'percent_change_24h': response['percent_change_24h'],
                 'volume_24_usd': response['24h_volume_usd'],
                 'market_cap_usd': response['market_cap_usd'],
-                'binance_price': None if not check.binance else getBinCoinPrice(
-                    check.binance)
+                'binance_price': b_price.coin_price(
+                    coin=check.binance)['price'] if b_price else None
                 }
         return data
 
