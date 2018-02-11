@@ -7,10 +7,13 @@ import time
 from modules import *
 from settings import *
 
-logger = logging.getLogger(__name__)
-formatter = logging.Formatter(LOG_FORMAT)
+with open('config.json') as f:
+    config = json.load(f)
 
-file_handler = logging.FileHandler(LOG_FN_MAIN)
+logger = logging.getLogger(__name__)
+formatter = logging.Formatter(config["log_format"])
+
+file_handler = logging.FileHandler('main.log')
 file_handler.setFormatter(formatter)
 
 logger.addHandler(file_handler)
@@ -165,8 +168,8 @@ def ct(bot, update, args):
                 bot.send_message(chat_id=update.message.chat_id, text=message)
 
         if cont:
-            fiat_1 = token_1.name in SUPPORTED_FIAT
-            fiat_2 = token_2.name in SUPPORTED_FIAT
+            fiat_1 = token_1.name in config["supported_fiat"]
+            fiat_2 = token_2.name in config["supported_fiat"]
 
             if fiat_1 or fiat_2:
                 if fiat_1 and fiat_2:
@@ -230,13 +233,14 @@ def newCoin(bot, job):
     new_coin = binance.check_list()
     message = str()
     t_now = time.strftime('%H%M', time.localtime(time.time()))
-    refresh = (t_now[:-2] in REFRESH_T['hrs']) and (t_now[2:] in REFRESH_T['mins'])
+    refresh = (t_now[:-2] in config["rt"]['hrs']) and (
+        t_now[2:] in config["rt"]['mins'])
 
     if new_coin:
         for item in range(len(new_coin)):
             message += "\n<code>{} has been added to Binance</code>".format(
                 new_coin[item])
-        bot.send_message(chat_id=GRP_ID, parse_mode='HTML', text=message)
+        bot.send_message(chat_id=config["grp_id"], parse_mode='HTML', text=message)
 
     if refresh:
         try:
@@ -264,7 +268,9 @@ def main():
     try:
         logger.info("Start by {0}()".format(main.__name__))
 
-        updater = Updater(token=TOKEN)
+        auth = config["wh_auth"]
+
+        updater = Updater(token=auth["token"])
         dispatcher = updater.dispatcher
         j = updater.job_queue
 
@@ -277,9 +283,11 @@ def main():
         ct_handler = CommandHandler('ct', ct, pass_args=True)
 
         # ADMIN COMMANDS
-        refresh_handler = CommandHandler('refresh',
-                                         refresh,
-                                         filters=Filters.user(user_id=ADMIN[0]))
+        refresh_handler = CommandHandler(
+            'refresh',
+            refresh,
+            filters=Filters.user(user_id=config["admin_id"])
+        )
 
         dispatcher.add_handler(start_handler)
         dispatcher.add_handler(price_handler)
@@ -289,12 +297,12 @@ def main():
 
 
         updater.start_webhook(
-            listen=LISTEN_ADR,
-            port=PORT,
-            url_path='TOKEN',
-            key=KEY,
-            cert=CERT,
-            webhook_url=URL
+            listen=auth["wh_listen_addr"],
+            port=auth["wh_port"],
+            url_path="TOKEN",
+            key=auth["wh_key"],
+            cert=auth["wh_cert"],
+            webhook_url=auth["wh_url"]
         )
 
         updater.idle()

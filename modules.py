@@ -1,13 +1,17 @@
 # -*- coding: utf-8 -*-
 import requests
 import csv
+import json
 from wrappers import *
 from settings import *
 
-logger = logging.getLogger(__name__)
-formatter = logging.Formatter(LOG_FORMAT)
+with open('config.json') as f:
+    config = json.load(f)
 
-file_handler = logging.FileHandler(LOG_FN_MAIN)
+logger = logging.getLogger(__name__)
+formatter = logging.Formatter(config["log_format"])
+
+file_handler = logging.FileHandler('main.log')
 file_handler.setFormatter(formatter)
 
 logger.addHandler(file_handler)
@@ -35,7 +39,7 @@ class CheckCoin(object):
                     self.__found = True
 
         if not self.__found:
-            self.fiat = self.coin.upper() in SUPPORTED_FIAT
+            self.fiat = self.coin.upper() in config["supported_fiat"]
             self.symbol = None
             self.name = self.coin.upper() if self.fiat else None
             self.coin_id = None
@@ -67,10 +71,10 @@ def getCmc():
             if row[0] in same:
                 row.append(row[0])
                 writer.writerow(row)
-            elif row[0] in BINANCE_SPECIAL.keys():
-                row.append(BINANCE_SPECIAL[row[0]])
+            elif row[0] in config["binance_special"].keys():
+                row.append(config["binance_special"][row[0]])
                 writer.writerow(row)
-                bincoins.pop(bincoins.index(BINANCE_SPECIAL[row[0]]))
+                bincoins.pop(bincoins.index(config["binance_special"][row[0]]))
             else:
                 row.append(0)
                 writer.writerow(row)
@@ -177,8 +181,8 @@ def convertToken(token_1, token_2, amount):
     req = Coinmarketcap()
 
     try:
-        fiat_1 = token_1.upper() in SUPPORTED_FIAT
-        fiat_2 = token_2.upper() in SUPPORTED_FIAT
+        fiat_1 = token_1.upper() in config["supported_fiat"]
+        fiat_2 = token_2.upper() in config["supported_fiat"]
     except AttributeError:
         return None
 

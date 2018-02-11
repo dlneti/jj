@@ -8,11 +8,13 @@ import csv
 import time
 from settings import LOG_FORMAT, LOG_FN_MAIN
 
+with open('config.json') as f:
+    config = json.load(f)
+
 logger = logging.getLogger(__name__)
+formatter = logging.Formatter(config["log_format"])
 
-formatter = logging.Formatter(LOG_FORMAT)
-
-file_handler = logging.FileHandler(LOG_FN_MAIN)
+file_handler = logging.FileHandler('main.log')
 file_handler.setFormatter(formatter)
 
 logger.addHandler(file_handler)
