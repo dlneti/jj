@@ -1,14 +1,10 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
+from telegram import Bot, TelegramError
 from telegram.ext import Updater, CommandHandler, Filters
-import json
-import time
 from modules import *
-from settings import *
 
-with open('config.json') as f:
-    config = json.load(f)
 
 logger = logging.getLogger(__name__)
 formatter = logging.Formatter(config["log_format"])
@@ -19,7 +15,6 @@ file_handler.setFormatter(formatter)
 logger.addHandler(file_handler)
 logger.setLevel(logging.INFO)
 
-@log_method
 def start(bot, update):
 
     message = "Hi, my name is Marvin. Please, be nice to me."
@@ -37,11 +32,9 @@ def start(bot, update):
         update.message.chat.type)
     )
 
-@log_method
 def error(bot, update, error):
     logger.warn('Update {0} caused error {1}'.format(update, error))
 
-@log_method
 def getPrice(bot, update, args):
 
 
@@ -118,7 +111,6 @@ def getPrice(bot, update, args):
                 update.message.chat.type)
             )
 
-@log_method
 def ct(bot, update, args):
 
     if len(args) == 1 and args[0] == 'help':
@@ -226,7 +218,6 @@ def ct(bot, update, args):
         update.message.chat.type)
     )
 
-@log_method
 def newCoin(bot, job):
 
     binance = Binance()
@@ -251,7 +242,6 @@ def newCoin(bot, job):
         except Exception:
             logger.exception("Something went wrong. CMC not refreshed")
 
-@log_method
 def refresh(bot, update):
 
     getCmc()

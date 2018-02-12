@@ -1,12 +1,5 @@
 # -*- coding: utf-8 -*-
-import requests
-import csv
-import json
 from wrappers import *
-from settings import *
-
-with open('config.json') as f:
-    config = json.load(f)
 
 logger = logging.getLogger(__name__)
 formatter = logging.Formatter(config["log_format"])

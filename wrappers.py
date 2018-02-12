@@ -6,7 +6,6 @@ import logging
 import json
 import csv
 import time
-from settings import LOG_FORMAT, LOG_FN_MAIN
 
 with open('config.json') as f:
     config = json.load(f)
