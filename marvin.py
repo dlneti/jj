@@ -72,12 +72,12 @@ def getPrice(bot, update, args):
             name = response['name']
             rank = response['rank']
             symbol = response['symbol']
-            price_usd = parsePrice(str(round(float(response['price_usd']), 3)))
+            price_usd = thousandify(str(round(float(response['price_usd']), 3)))
             price_btc = response['price_btc']
             percent_change_24h = response['percent_change_24h']
             c_sign = '+' if float(percent_change_24h) >= 0 else ''
-            volume_24_usd = parsePrice(response['volume_24_usd'])
-            market_cap_usd = parsePrice(response['market_cap_usd'])
+            volume_24_usd = thousandify(response['volume_24_usd'])
+            market_cap_usd = thousandify(response['market_cap_usd'])
             b_price = response['binance_price']
 
             message = "<pre>{} ({})</pre>".format(name, symbol)
@@ -170,9 +170,9 @@ def ct(bot, update, args):
                     converted = convertToken(token_1.name, token_2.coin_id, amount)
                     if converted:
                         message = "{} <i>{}</i> = <b>{}</b> <i>{}</i>".format(
-                            parsePrice(amount),
+                            thousandify(amount),
                             token_1.name,
-                            parsePrice(converted),
+                            thousandify(converted),
                             token_2.symbol
                         )
                     else:
@@ -181,9 +181,9 @@ def ct(bot, update, args):
                     converted = convertToken(token_1.coin_id, token_2.name, amount)
                     if converted:
                         message = "{} <i>{}</i> = <b>{}</b> <i>{}</i>".format(
-                            parsePrice(amount),
+                            thousandify(amount),
                             token_1.symbol,
-                            parsePrice(converted),
+                            thousandify(converted),
                             token_2.name
                         )
                     else:
@@ -198,12 +198,12 @@ def ct(bot, update, args):
                     message = "something unexpected has happened ... maybe try again later?"
                 else:
                     message = "{} <i>{}</i> = <b>{}</b> <i>{}</i> ".format(
-                        parsePrice(amount),
+                        thousandify(amount),
                         token_1.symbol,
-                        parsePrice(converted[0]),
+                        thousandify(converted[0]),
                         token_2.symbol
                     )
-                    message += "| <b>${}</b>".format(parsePrice(converted[1]))
+                    message += "| <b>${}</b>".format(thousandify(converted[1]))
 
                 bot.send_message(chat_id=update.message.chat_id,
                                  parse_mode='HTML',

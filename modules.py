@@ -73,61 +73,42 @@ def getCmc():
                 writer.writerow(row)
 
 
-def parsePrice(x):
+def thousandify(x):
     """Takes price (float, int or string) as argument and inserts commas to separate thousands"""
 
-    price = str(x)
-
-    if '.' not in price:
-        if price is None:
-            return 'n/a'
-        else:
-            parseList = [a for a in price]
-            l = len(parseList)
-
-        def parsed(f): return ''.join(f)[:-1]
-
+    try:
+        float(x)
+    except ValueError:
+        raise ValueError("Requires a number or a string of number")
     else:
-        if price is None:
-            return 'n/a'
+        price = str(x)
+
+        #if float, only parse left side of the dot
+        if '.' in price:
+            pl = [a for a in price.split('.')[0]]
+            def parsed(f): return ''.join(f) + price.split('.')[1]
         else:
-            parseList = [a for a in price.split('.')[0]]
-            l = len(parseList)
+            pl = [a for a in price]
+            def parsed(f): return ''.join(f)[:-1]
 
-        def parsed(f): return ''.join(f) + price.split('.')[1]
+        l = float(len(pl))
 
-    if l <= 3:
-        return str(x)
-    elif l > 3 and l <= 6:
-        parseList.insert(-3, ',')
-        parseList.append('.')
-        return parsed(parseList)
-    elif l > 6 and l <= 9:
-        parseList.insert(-6, ',')
-        parseList.insert(-3, ',')
-        parseList.append('.')
-        return parsed(parseList)
-    elif l > 9 and l <= 12:
-        parseList.insert(-9, ',')
-        parseList.insert(-6, ',')
-        parseList.insert(-3, ',')
-        parseList.append('.')
-        return parsed(parseList)
-    elif l > 12 and l <= 15:
-        parseList.insert(-12, ',')
-        parseList.insert(-9, ',')
-        parseList.insert(-6, ',')
-        parseList.insert(-3, ',')
-        parseList.append('.')
-        return parsed(parseList)
-    elif l > 15 and l <= 18:
-        parseList.insert(-15, ',')
-        parseList.insert(-12, ',')
-        parseList.insert(-9, ',')
-        parseList.insert(-6, ',')
-        parseList.insert(-3, ',')
-        parseList.append('.')
-        return parsed(parseList)
+        if l <= 3:
+            return str(x)
+        else:
+            times = l / 3
+            mod_zero = l % times == 0
+            if not mod_zero:
+                times += 1
+            index = [i*-3 for i in range(1, int(times))[::-1]]
+
+            for i in index:
+                pl.insert(i, ',')
+            pl.append('.')
+
+            pd_l = pl if pl[0] != ',' else pl[1:]
+
+            return parsed(pd_l)
 
 
 def getBinCoinPrice(coin):
