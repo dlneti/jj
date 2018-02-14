@@ -197,3 +197,11 @@ def checkDigit(x):
         return str(check)
     except ValueError:
         return None
+
+def conv_t(x):
+    y,m,d = x.split(' ')[0].split('-')
+
+    if y == '0000':
+        return None
+
+    return datetime(int(y),int(m),int(d)).strftime('%b %d, %Y')

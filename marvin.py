@@ -218,6 +218,136 @@ def ct(bot, update, args):
         update.message.chat.type)
     )
 
+def ico(bot, update, args):
+    escapes = "\r\n"
+    coins = []
+
+    try:
+        data = Ico()
+        if args[0] == 'help':
+            message = "<b>Usage:</b>\n"
+            message += "1. /ico search [custom_keyword]\n"
+            message += "- Lists ICOs that have a certain string in the name,"
+            message += " token name, tagline or short description.\n"
+            message += "- E.g. /ico search JNT or /ico search gaming"
+            message += "\n\n2. /ico trend\n"
+            message += "- Lists up to 8 ICOs that are currently trending\n\n"
+            message += "3. /ico [name or id]\n"
+            message += "- Provides a detailed information about a specified ICO.\n"
+            message += "- Accepted input is either a full name (case-insensitive)"
+            message += " or id number (both can be looked up by /ico search)\n"
+            message += "- E.g. /ico 282 -> Returns detailed data about JNT\n\n"
+            message += "Note:\nThis is just the beginning."
+
+
+        elif args[0] == 'trend':
+            trending =  data.trending()['results']
+            message = "<b>Trending ICOs</b>\n"+"_"*30+"\n\n"
+
+            for i in trending:
+                d = {'n':i['name'].encode('utf-8'),
+                     'i':str(i['id']),
+                     'd':i['desc'].encode('utf-8').translate(None,escapes),
+                     's':conv_t(i['dates']["icoStart"]),
+                     'e':conv_t(i['dates']["icoEnd"])
+                     }
+                coins.append(d)
+
+            for i in coins:
+
+                message += "\n<code>{}</code> | ID:{}\n".format(i['n'],i['i'])
+                message += "Start: <b>{}</b>\n".format(i['s'])
+                message += "End: <b>{}</b>\n\n".format(i['e'])
+                message += "<b>About</b>\n"
+                message += "{}\n".format(i['d'])
+                message += "_" * 35 + "\n"
+
+        elif args[0] == 'search':
+            search = data.all(search=args[1])
+            message = ""
+
+            try:
+                search['results']
+            except KeyError:
+                message += "I ain't got all the answers man..."
+                logger.info("{} - ICO not found".format(args[1]))
+            else:
+                message += "Here's something:\n"
+
+                if len(search['results']) == 1:
+                    i = search['results'][0]
+
+                    message += "\n<code>{}</code> | ID:{}\n".format(i['name'],i['id'])
+                    message += "Start: <b>{}</b>\n".format(conv_t(i['dates']["icoStart"]))
+                    message += "End: <b>{}</b>\n\n".format(conv_t(i['dates']["icoEnd"]))
+                    message += "<b>About</b>\n"
+                    message += "{}\n".format(i['desc']).translate(None,escapes)
+                else:
+                    for i in search['results']:
+                        d = {'n':i['name'].encode('utf-8'),
+                             'i':i['id'],
+                             'd':i['desc'].encode('utf-8').translate(None,escapes),
+                             's':conv_t(i['dates']["icoStart"]),
+                             'e':conv_t(i['dates']["icoEnd"])
+                             }
+                        coins.append(d)
+
+                    for i in coins:
+                        message += "\n<code>{}</code> | ID:{}\n".format(i['n'],i['i'])
+                        message += "Start: <b>{}</b>\n".format(i['s'])
+                        message += "End: <b>{}</b>\n\n".format(i['e'])
+                        message += "<b>About</b>\n"
+                        message += "{}\n".format(i['d'])
+                        message += "_" * 35 + "\n"
+
+        else:
+            try:
+                r = data.detail(args[0])
+
+                message = "{0} - <b>{1}</b>\n".format(r['name'].encode(
+                    'utf-8'), r['finance']['token'])
+                message += "<i>{0}</i>\n\n".format(r['tagline'].encode('utf-8'))
+                message += "Pre-sale: <b>{0} - {1}</b>\n".format(
+                    conv_t(r['dates']["preIcoStart"]), conv_t(r['dates']["preIcoEnd"]))
+                message += "ICO: <b>{0} - {1}</b>\n\n<b>About</b>\n".format(
+                    conv_t(r['dates']["icoStart"]), conv_t(r['dates']["icoEnd"]))
+                message += r['intro'].encode('utf-8').translate(None,escapes)
+                message += "\n\n<b>Finance</b>\n"
+                message += "Raised: ${0}\n".format(thousandify(r['finance']['raised']))
+                message += "ICO Price: {0}\n".format(r['finance']['price'])
+                message += "Distributed: {0}\n".format(r['finance']['distributed'])
+                message += "Supply: {0}\n".format(thousandify(r['finance']['tokens']))
+                if r['exchanges']:
+                    message += "\n<b>Available Exchanges:</b>\n<pre>"
+                    for i in r['exchanges']:
+                        message += "{0}, ".format(i['name'])[:-2]
+                    message += "</pre>\n"
+                message += "\n<b>Other Info:</b>\n"
+                message += "Platform - <i>{0}</i>\n".format(r['finance']['platform'])
+                message += "Type - <i>{0}</i>\n\n".format(r['finance']['tokentype'])
+                message += "<b>Links</b>\n"
+                message += "Website: {0}\n".format(r['links']['www'])
+                message += "Twitter: {0}\n".format(r['links']['twitter'])
+                message += "Telegram: {0}\n".format(r['links']['telegram'])
+                message += "Reddit: {0}\n".format(r['links']['reddit'])
+                message += "White Paper: {0}\n".format(r['links']['whitepaper'])
+            except KeyError:
+                message = "This is not the ICO you are looking for"
+
+        bot.send_message(chat_id=update.message.chat_id,parse_mode='HTML', text=message)
+        logger.info("{0}({1}) by {2}:{3}:{4}:{5}-{6}".format(
+            ico.__name__,
+            ', '.join(args),
+            update.message.from_user['username'],
+            update.message.from_user['id'],
+            update.message.from_user['language_code'],
+            update.message.chat_id,
+            update.message.chat.type)
+        )
+
+    except Exception:
+        logger.exception("Something went wrong running {}".format(ico.__name__))
+
 def newCoin(bot, job):
 
     binance = Binance()
@@ -271,6 +401,7 @@ def main():
         start_handler = CommandHandler('start', start)
         price_handler = CommandHandler('price', getPrice, pass_args=True)
         ct_handler = CommandHandler('ct', ct, pass_args=True)
+        ico_handler = CommandHandler('ico', ico, pass_args=True)
 
         # ADMIN COMMANDS
         refresh_handler = CommandHandler(
@@ -283,6 +414,7 @@ def main():
         dispatcher.add_handler(price_handler)
         dispatcher.add_handler(ct_handler)
         dispatcher.add_handler(refresh_handler)
+        dispatcher.add_handler(ico_handler)
         dispatcher.add_error_handler(error)
 
 

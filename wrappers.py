@@ -2,10 +2,14 @@
 
 import requests
 import requests_cache
+import hashlib
 import logging
 import json
 import csv
+import base64
+import hmac
 import time
+from datetime import datetime
 
 with open('config.json') as f:
     config = json.load(f)
@@ -221,3 +225,112 @@ class Coinmarketcap(object):
         params.update(kwargs)
 
         return self.__request('global/', params)
+
+
+class Ico:
+
+    auth = config["ico_b"]
+    _session = None
+    _BASE_URL = auth["base_url"]
+    _CACHE_FN = auth["cache_file"]
+
+    @log_method
+    def __init__(self,
+                 pub_key=auth["pub_key"],
+                 pr_key=auth["pr_key"],
+                 base_url=_BASE_URL,
+                 cache_name=_CACHE_FN
+                 ):
+        self.pub_key = str(pub_key)
+        self.pr_key = str(pr_key)
+        self.base_url = base_url
+        self.cache_file = cache_name
+        self.params = {}
+
+
+    @log_method
+    def session(self):
+        if not self._session:
+            self._session = requests_cache.core.CachedSession(
+                cache_name=self.cache_file,
+                backend='sqlite',
+                expire_after=3600
+            )
+
+        return self._session
+
+
+    @log_method
+    def _request(self, endpoint):
+        headers = self._sign_req(
+            json.dumps(self.params))
+
+        try:
+            request_raw = self.session().post(
+                self.base_url + endpoint,
+                headers=headers,
+                json=self.params
+            )
+            logger.debug("Request to {0} successful".format(
+                request_raw.url)
+            )
+        except Exception:
+            logger.exception("Request failed")
+        else:
+            return request_raw.json()
+
+
+    @log_method
+    def _sign_req(self, params):
+        sig = hmac.new(
+            self.pr_key,
+            params,
+            digestmod=hashlib.sha384
+        )
+
+        headers = {'X-ICObench-Key': self.pub_key}
+        headers.update(
+            {'X-ICObench-Sig': base64.b64encode(
+                sig.digest()).strip()}
+        )
+
+        return headers
+
+
+    @log_method
+    def all(self, **kwargs):
+        endpoint = "icos/all"
+        self.params.update(kwargs)
+
+        return self._request(endpoint)
+
+
+    @log_method
+    def trending(self):
+        endpoint = "icos/trending"
+
+        return self._request(endpoint)
+
+
+    @log_method
+    def detail(self, coin_id):
+        endpoint = "/ico/{}".format(coin_id)
+
+        return self._request(endpoint)
+
+
+    @log_method
+    def people(self, mode='all', **kwargs):
+        if mode not in modes:
+            return None
+        else:
+            endpoint = 'people/' + mode
+            self.params.update(kwargs)
+
+            return self._request(endpoint)
+
+    @log_method
+    def stats(self):
+        endpoint = "other/stats"
+
+        return self._request(endpoint)
