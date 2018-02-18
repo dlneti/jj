@@ -55,7 +55,7 @@ def getPrice(bot, update, args):
         )
     else:
         if not response:
-            message = "'{}' is not in my database. Check your spelling.".format(args[0])
+            message = "'{0}' is not in my database. Check your spelling.".format(args[0])
             bot.send_message(chat_id=update.message.chat_id, text=message)
 
             logger.info("/price {0}:NOT_FOUND {1}:{2}:{3}:{4}-{5}".format(
@@ -80,24 +80,24 @@ def getPrice(bot, update, args):
             market_cap_usd = thousandify(response['market_cap_usd'])
             b_price = response['binance_price']
 
-            message = "<pre>{} ({})</pre>".format(name, symbol)
-            message += "\n<pre>Rank   | {}</pre>".format(rank)
-            message += "\n<pre>Price  | ${} - {}{}</pre>".format(
+            message = "<pre>{0} ({1})</pre>".format(name, symbol)
+            message += "\n<pre>Rank   | {0}</pre>".format(rank)
+            message += "\n<pre>Price  | ${0} - {1}{2}</pre>".format(
                 price_usd, u"\u0243".encode('utf-8'), price_btc)
-            message +="\n<pre>Change | {}{}%  (24H)</pre>".format(
+            message +="\n<pre>Change | {0}{1}%  (24H)</pre>".format(
                 c_sign, str(percent_change_24h)
             )
-            message += "\n<pre>Volume | ${}  (24H)</pre>".format(volume_24_usd)
-            message += "\n<pre>MC     | ${}</pre>".format(market_cap_usd)
+            message += "\n<pre>Volume | ${0}  (24H)</pre>".format(volume_24_usd)
+            message += "\n<pre>MC     | ${0}</pre>".format(market_cap_usd)
 
             bot.send_message(chat_id=update.message.chat_id,
                              parse_mode='HTML', text=message)
 
             if b_price:
-                b_sign = '${}'.format(b_price[:-6]) if args[0].upper(
+                b_sign = '${0}'.format(b_price[:-6]) if args[0].upper(
                     ) == 'BTC' else '{}{}'.format(
                         u"\u0243".encode('utf-8'), b_price)
-                binance_message = "\n<pre>Binance price - {}</pre>".format(
+                binance_message = "\n<pre>Binance price - {0}</pre>".format(
                     b_sign)
                 bot.send_message(chat_id=update.message.chat_id,
                                  parse_mode='HTML', text=binance_message)
@@ -148,13 +148,13 @@ def ct(bot, update, args):
 
         if not token_1.symbol:
             if not token_1.name:
-                message = "'{}' is not in my database. Check your spelling".format(
+                message = "'{0}' is not in my database. Check your spelling".format(
                     args[0])
                 cont = False
                 bot.send_message(chat_id=update.message.chat_id, text=message)
         elif not token_2.symbol:
             if not token_2.name:
-                message = "'{}' is not in my database. Check your spelling".format(
+                message = "'{0}' is not in my database. Check your spelling".format(
                     args[1])
                 cont = False
                 bot.send_message(chat_id=update.message.chat_id, text=message)
@@ -169,7 +169,7 @@ def ct(bot, update, args):
                 elif fiat_1:
                     converted = convertToken(token_1.name, token_2.coin_id, amount)
                     if converted:
-                        message = "{} <i>{}</i> = <b>{}</b> <i>{}</i>".format(
+                        message = "{0} <i>{1}</i> = <b>{2}</b> <i>{3}</i>".format(
                             thousandify(amount),
                             token_1.name,
                             thousandify(converted),
@@ -180,7 +180,7 @@ def ct(bot, update, args):
                 else:
                     converted = convertToken(token_1.coin_id, token_2.name, amount)
                     if converted:
-                        message = "{} <i>{}</i> = <b>{}</b> <i>{}</i>".format(
+                        message = "{0} <i>{1}</i> = <b>{2}</b> <i>{3}</i>".format(
                             thousandify(amount),
                             token_1.symbol,
                             thousandify(converted),
@@ -197,13 +197,13 @@ def ct(bot, update, args):
                 if not converted:
                     message = "something unexpected has happened ... maybe try again later?"
                 else:
-                    message = "{} <i>{}</i> = <b>{}</b> <i>{}</i> ".format(
+                    message = "{0} <i>{1}</i> = <b>{2}</b> <i>{3}</i> ".format(
                         thousandify(amount),
                         token_1.symbol,
                         thousandify(converted[0]),
                         token_2.symbol
                     )
-                    message += "| <b>${}</b>".format(thousandify(converted[1]))
+                    message += "| <b>${0}</b>".format(thousandify(converted[1]))
 
                 bot.send_message(chat_id=update.message.chat_id,
                                  parse_mode='HTML',
@@ -242,7 +242,7 @@ def ico(bot, update, args):
 
         elif args[0] == 'trend':
             trending =  data.trending()['results']
-            message = "<b>Trending ICOs</b>\n"+"_"*30+"\n\n"
+            message = "<b>Trending ICOs</b>\n"+"_"*30+"\n"
 
             for i in trending:
                 d = {'n':i['name'].encode('utf-8'),
@@ -255,11 +255,11 @@ def ico(bot, update, args):
 
             for i in coins:
 
-                message += "\n<code>{}</code> | ID:{}\n".format(i['n'],i['i'])
-                message += "Start: <b>{}</b>\n".format(i['s'])
-                message += "End: <b>{}</b>\n\n".format(i['e'])
+                message += "\n<code>{0}</code> | ID:{1}\n".format(i['n'],i['i'])
+                message += "Start: <b>{0}</b>\n".format(i['s'])
+                message += "End: <b>{0}</b>\n\n".format(i['e'])
                 message += "<b>About</b>\n"
-                message += "{}\n".format(i['d'])
+                message += "{0}\n".format(i['d'])
                 message += "_" * 35 + "\n"
 
         elif args[0] == 'search':
@@ -270,22 +270,23 @@ def ico(bot, update, args):
                 search['results']
             except KeyError:
                 message += "I ain't got all the answers man..."
-                logger.info("{} - ICO not found".format(args[1]))
+                logger.info("{0} - ICO not found".format(args[1]))
             else:
                 message += "Here's something:\n"
 
                 if len(search['results']) == 1:
                     i = search['results'][0]
 
-                    message += "\n<code>{}</code> | ID:{}\n".format(i['name'],i['id'])
-                    message += "Start: <b>{}</b>\n".format(conv_t(i['dates']["icoStart"]))
-                    message += "End: <b>{}</b>\n\n".format(conv_t(i['dates']["icoEnd"]))
+                    message += "\n<code>{0}</code> | ID:{1}\n".format(i['name'],i['id'])
+                    message += "Start: <b>{0}</b>\n".format(conv_t(i['dates']["icoStart"]))
+                    message += "End: <b>{0}</b>\n\n".format(conv_t(i['dates']["icoEnd"]))
                     message += "<b>About</b>\n"
-                    message += "{}\n".format(i['desc']).translate(None,escapes)
+                    message += "{0}\n".format(i['desc'].encode(
+                        'utf-8').translate(None,escapes))
                 else:
                     for i in search['results']:
                         d = {'n':i['name'].encode('utf-8'),
-                             'i':i['id'],
+                             d'i':i['id'],
                              'd':i['desc'].encode('utf-8').translate(None,escapes),
                              's':conv_t(i['dates']["icoStart"]),
                              'e':conv_t(i['dates']["icoEnd"])
@@ -293,11 +294,11 @@ def ico(bot, update, args):
                         coins.append(d)
 
                     for i in coins:
-                        message += "\n<code>{}</code> | ID:{}\n".format(i['n'],i['i'])
-                        message += "Start: <b>{}</b>\n".format(i['s'])
-                        message += "End: <b>{}</b>\n\n".format(i['e'])
+                        message += "\n<code>{0}</code> | ID:{1}\n".format(i['n'],i['i'])
+                        message += "Start: <b>{0}</b>\n".format(i['s'])
+                        message += "End: <b>{0}</b>\n\n".format(i['e'])
                         message += "<b>About</b>\n"
-                        message += "{}\n".format(i['d'])
+                        message += "{0}\n".format(i['d'])
                         message += "_" * 35 + "\n"
 
         else:
@@ -311,18 +312,24 @@ def ico(bot, update, args):
                     conv_t(r['dates']["preIcoStart"]), conv_t(r['dates']["preIcoEnd"]))
                 message += "ICO: <b>{0} - {1}</b>\n\n<b>About</b>\n".format(
                     conv_t(r['dates']["icoStart"]), conv_t(r['dates']["icoEnd"]))
-                message += r['intro'].encode('utf-8').translate(None,escapes)
-                message += "\n\n<b>Finance</b>\n"
+                message += "{}\n".format(parse_html(r['intro'].encode('utf-8')))
+                if r['milestones']:
+                    message += "\n<b>Roadmap</b>\n"
+                    for i in r['milestones']:
+                        message += "<code>{0}</code>\n{1}<i>{2}</i>\n".format(
+                            i['title'], '' if '-' in i['content'][:2] else '-', parse_html(
+                            i['content'].encode('utf-8')))
+                message += "\n<b>Finance</b>\n"
                 message += "Raised: ${0}\n".format(thousandify(r['finance']['raised']))
                 message += "ICO Price: {0}\n".format(r['finance']['price'])
                 message += "Distributed: {0}\n".format(r['finance']['distributed'])
                 message += "Supply: {0}\n".format(thousandify(r['finance']['tokens']))
                 if r['exchanges']:
-                    message += "\n<b>Available Exchanges:</b>\n<pre>"
+                    e_message = "\n<b>Available Exchanges:</b>\n<pre>"
                     for i in r['exchanges']:
-                        message += "{0}, ".format(i['name'])[:-2]
-                    message += "</pre>\n"
-                message += "\n<b>Other Info:</b>\n"
+                        e_message += "{0}, ".format(i['name'])
+                    message += e_message[:-2]+"</pre>\n"
+                message += "\n<b>Other Info</b>\n"
                 message += "Platform - <i>{0}</i>\n".format(r['finance']['platform'])
                 message += "Type - <i>{0}</i>\n\n".format(r['finance']['tokentype'])
                 message += "<b>Links</b>\n"
@@ -332,9 +339,10 @@ def ico(bot, update, args):
                 message += "Reddit: {0}\n".format(r['links']['reddit'])
                 message += "White Paper: {0}\n".format(r['links']['whitepaper'])
             except KeyError:
-                message = "This is not the ICO you are looking for"
+                message = "This is not the ICO you are looking for 👋"
 
-        bot.send_message(chat_id=update.message.chat_id,parse_mode='HTML', text=message)
+        bot.send_message(chat_id=update.message.chat_id,
+            parse_mode='HTML', text=message)
         logger.info("{0}({1}) by {2}:{3}:{4}:{5}-{6}".format(
             ico.__name__,
             ', '.join(args),
@@ -346,7 +354,10 @@ def ico(bot, update, args):
         )
 
     except Exception:
-        logger.exception("Something went wrong running {}".format(ico.__name__))
+        logger.exception("Something went wrong running {0}({1})".format(
+            ico.__name__,
+            ', '.join(args))
+        )
 
 def newCoin(bot, job):
 

@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
+from HTMLParser import HTMLParser
 from wrappers import *
+
 
 logger = logging.getLogger(__name__)
 formatter = logging.Formatter(config["log_format"])
@@ -111,20 +113,31 @@ def thousandify(x):
             return parsed(pd_l)
 
 
-def getBinCoinPrice(coin):
-    url = "https://api.binance.com/api/v3/ticker/price"
+def parse_html(message):
+    result = []
+    html_spec = {'rsquo': "'",
+                 'lsquo': "'",
+                 'rdquo': '"',
+                 'ldquo': '"',
+                 'copy': '(C)',
+                 'ndash': '-',
+                 'nbsp': ''
+                 }
 
-    if coin.upper() == "BTC":
-        params = {"symbol": "BTCUSDT"}
-    else:
-        params = {"symbol": coin.upper() + "BTC"}
+    class IcoParser(HTMLParser):
+        def handle_data(self, data):
+            result.append(data)
 
-    data = requests.request('GET', url, params=params).json()
+        def handle_entityref(self, data):
+            if data in html_spec.keys():
+                result.append(html_spec[data])
+            else:
+                result.append(data)
 
-    try:
-        return data['price']
-    except KeyError:
-        return None
+    p = IcoParser()
+    p.feed(message)
+
+    return ''.join(result).replace('\\r', '')
 
 
 def getCoinPrice(coin):
